@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF动态翻页查看器</title>
+    <link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+    <div class="container">
+        <div class="viewer">
+            <canvas id="pdf-canvas"></canvas>
+        </div>
+        <div class="controls">
+            <button id="prev-page">上一页</button>
+            <span>页码: <span id="current-page">1</span> / <span id="total-pages">-</span></span>
+            <button id="next-page">下一页</button>
+        </div>
+    </div>
+    <script src="node_modules/pdfjs-dist/build/pdf.js"></script>
+    <script src="viewer.js"></script>
+</body>
+</html>
