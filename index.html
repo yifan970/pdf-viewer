@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PDF阅读器 - 优化比例</title>
+    <title>PDF阅读器 - 翻页修复版</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -126,6 +126,7 @@
             padding: 10px;
             box-sizing: border-box;
             margin-top: 20px;
+            cursor: pointer;
         }
 
         #pdf-canvas {
@@ -286,6 +287,31 @@
             transition: opacity 0.3s;
         }
 
+        /* 翻页区域指示器 */
+        .page-nav-area {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 30%;
+            opacity: 0.3;
+            z-index: 5;
+            transition: background 0.3s;
+        }
+        
+        .prev-area {
+            left: 0;
+            background: var(--ocean-blue);
+        }
+        
+        .next-area {
+            right: 0;
+            background: var(--ocean-blue);
+        }
+        
+        .page-nav-area:hover {
+            opacity: 0.2;
+        }
+
         @media (max-width: 768px) {
             .nav-btn {
                 width: 55px;
@@ -353,7 +379,7 @@
     
     <div class="app-title">
         <i class="fas fa-file-pdf"></i>
-        <span>PDF阅读器</span>
+        <span>PDF阅读器 - 翻页修复版</span>
     </div>
     
     <div class="quality-toggle">
@@ -362,6 +388,10 @@
     </div>
     
     <div id="pdf-container">
+        <!-- 翻页区域指示器 -->
+        <div class="page-nav-area prev-area" id="prev-area"></div>
+        <div class="page-nav-area next-area" id="next-area"></div>
+        
         <canvas id="pdf-canvas"></canvas>
     </div>
     
@@ -412,6 +442,8 @@
         const fitAutoBtn = document.getElementById('fit-auto');
         const qualityToggle = document.querySelector('.quality-toggle');
         const scaleIndicator = document.getElementById('scale-indicator');
+        const prevArea = document.getElementById('prev-area');
+        const nextArea = document.getElementById('next-area');
 
         // 创建页面指示器
         const pageIndicator = document.createElement('div');
@@ -615,6 +647,21 @@
             }
         };
 
+        // 翻页功能
+        const goToPrevPage = () => {
+            if (config.currentPage > 1) {
+                config.currentPage--;
+                renderPage();
+            }
+        };
+
+        const goToNextPage = () => {
+            if (config.currentPage < config.totalPages) {
+                config.currentPage++;
+                renderPage();
+            }
+        };
+
         // 事件监听设置
         const setupEventListeners = () => {
             // 键盘翻页
@@ -626,6 +673,10 @@
             // 按钮翻页
             prevBtn.addEventListener('click', goToPrevPage);
             nextBtn.addEventListener('click', goToNextPage);
+            
+            // 点击翻页区域
+            prevArea.addEventListener('click', goToPrevPage);
+            nextArea.addEventListener('click', goToNextPage);
             
             // 触摸滑动翻页
             let touchStartX = 0;
@@ -657,6 +708,19 @@
                     else goToPrevPage();
                 }
             }, { passive: true });
+            
+            // 点击左右边缘翻页
+            container.addEventListener('click', (e) => {
+                const rect = container.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
+                
+                if (clickX < width * 0.3) {
+                    goToPrevPage();
+                } else if (clickX > width * 0.7) {
+                    goToNextPage();
+                }
+            });
             
             // 窗口大小变化时重新渲染
             let resizeTimer;
@@ -714,21 +778,6 @@
                     '<i class="fas fa-star-half-alt"></i><span>标准模式</span>';
                 renderPage();
             });
-        };
-
-        // 翻页功能
-        const goToPrevPage = () => {
-            if (config.currentPage > 1) {
-                config.currentPage--;
-                renderPage();
-            }
-        };
-
-        const goToNextPage = () => {
-            if (config.currentPage < config.totalPages) {
-                config.currentPage++;
-                renderPage();
-            }
         };
 
         // 初始化
