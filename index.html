@@ -3,35 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PDF阅读器 - 翻页修复版</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>王一帆硕士专业学位论文</title>
     <style>
+        /* 重置样式 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-        }
-
-        :root {
-            --navy-blue: #001f3f;
-            --deep-blue: #003366;
-            --ocean-blue: #005b96;
-            --light-blue: #3498db;
-            --silver: #ecf0f1;
-            --gold: #f1c40f;
-            --text-light: #f8f9fa;
-            --text-gray: #e0e0e0;
+            }
+            :root {
+            --primary-blue: #032445;
+            --dark-blue: #082654;
+            --light-blue: #04365f;
+            --background-blue: #07416a;
         }
 
         html, body {
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: linear-gradient(135deg, var(--navy-blue), var(--deep-blue));
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            color: var(--text-light);
         }
 
         body {
@@ -44,29 +38,30 @@
             padding: 0;
         }
 
+        /* 加载指示器 */
         #loader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--navy-blue), var(--deep-blue));
+            background: linear-gradient(135deg, var(--dark-blue), var(--primary-blue));
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             z-index: 1000;
-            transition: opacity 0.5s;
+            transition: opacity 0.3s;
         }
         
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 5px solid rgba(255, 255, 255, 0.2);
-            border-top-color: var(--light-blue);
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            animation: spin 1.2s linear infinite;
-            margin-bottom: 30px;
+            border-top-color: #4a90e2;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
         }
         
         @keyframes spin {
@@ -74,10 +69,9 @@
         }
         
         .loading-text {
-            color: var(--text-gray);
-            font-size: 18px;
+            color: #e0e0e0;
+            font-size: 16px;
             font-weight: 500;
-            letter-spacing: 1px;
         }
         
         #error-message {
@@ -86,47 +80,27 @@
             top: 0;
             left: 0;
             width: 100%;
-            padding: 16px 20px;
-            background: #c0392b;
+            padding: 15px;
+            background: #e74c3c;
             color: white;
             text-align: center;
             z-index: 1001;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .app-title {
-            position: fixed;
-            top: 25px;
-            left: 25px;
-            font-size: 22px;
-            font-weight: 600;
-            color: var(--text-light);
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            opacity: 0.9;
-        }
-        
-        .app-title i {
-            color: var(--gold);
-        }
-
+        /* PDF容器 */
         #pdf-container {
             position: relative;
-            width: 95%;
+            width: 100%;
             max-width: 100%;
-            height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 60px);
+            height: calc(100vh - 5px); /* 留出一点空间防止溢出 */
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            padding: 10px;
-            box-sizing: border-box;
-            margin-top: 20px;
-            cursor: pointer;
+            padding: 0;
+            margin: 0;
         }
 
         #pdf-canvas {
@@ -135,237 +109,100 @@
             max-height: 100%;
             object-fit: contain;
             touch-action: none;
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
             background: white;
-            border-radius: 6px;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
         }
 
+        /* 页面指示器 */
         .page-indicator {
             position: fixed;
-            top: 25px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 31, 63, 0.9);
-            color: var(--text-light);
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-size: 17px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 15px;
             z-index: 10;
             transition: opacity 0.3s;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px);
             font-weight: 500;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
+        /* 导航按钮 */
         .nav-btn {
             position: fixed;
             top: 50%;
             transform: translateY(-50%);
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 53, 102, 0.9);
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 20;
-            opacity: 0.9;
-            transition: all 0.25s ease;
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(52, 152, 219, 0.4);
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(5px);
+            border: none;
             cursor: pointer;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
         
         .nav-btn:hover {
             opacity: 1;
-            transform: translateY(-50%) scale(1.05);
-            background: rgba(0, 91, 150, 0.95);
-            border-color: rgba(52, 152, 219, 0.6);
         }
         
         .prev-btn {
-            left: 25px;
+            left: 15px;
         }
         
         .next-btn {
-            right: 25px;
+            right: 15px;
         }
         
-        .nav-btn i {
-            font-size: 28px;
-            color: var(--text-light);
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
         }
 
-        .controls {
+        /* 移动端提示 */
+        .touch-hint {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 20px;
-            z-index: 15;
-            background: rgba(0, 31, 63, 0.85);
-            padding: 12px 25px;
-            border-radius: 50px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(52, 152, 219, 0.3);
-        }
-        
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(0, 53, 102, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.25s;
-            border: 1px solid rgba(52, 152, 219, 0.3);
-        }
-        
-        .control-btn:hover {
-            background: rgba(0, 91, 150, 0.9);
-            transform: scale(1.1);
-        }
-        
-        .control-btn i {
-            font-size: 22px;
-            color: var(--text-light);
-        }
-
-        .quality-toggle {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            background: rgba(0, 31, 63, 0.9);
-            color: var(--text-light);
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-size: 15px;
-            z-index: 10;
-            backdrop-filter: blur(10px);
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(52, 152, 219, 0.3);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .quality-toggle:hover {
-            background: rgba(0, 91, 150, 0.95);
-        }
-        
-        .quality-toggle i {
-            margin-right: 8px;
-            color: var(--gold);
-        }
-
-        .scale-indicator {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 31, 63, 0.85);
-            color: var(--text-light);
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 15px;
-            z-index: 10;
-            backdrop-filter: blur(10px);
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(52, 152, 219, 0.3);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        /* 翻页区域指示器 */
-        .page-nav-area {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            width: 30%;
-            opacity: 0.3;
-            z-index: 5;
-            transition: background 0.3s;
-        }
-        
-        .prev-area {
+            bottom: 25px;
             left: 0;
-            background: var(--ocean-blue);
-        }
-        
-        .next-area {
-            right: 0;
-            background: var(--ocean-blue);
-        }
-        
-        .page-nav-area:hover {
-            opacity: 0.2;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 14px;
+            padding: 12px;
+            z-index: 10;
+            animation: fadeHint 5s forwards;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
         }
 
-        @media (max-width: 768px) {
-            .nav-btn {
-                width: 55px;
-                height: 55px;
-                bottom: 25px;
-                top: auto;
-                transform: none;
-            }
-            
-            .prev-btn {
-                left: 15px;
-                top: auto;
-                bottom: 30px;
-            }
-            
-            .next-btn {
-                right: 15px;
-                top: auto;
-                bottom: 30px;
-            }
-            
+        @keyframes fadeHint {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 状态栏适配 */
+        @media (max-height: 600px) {
             .page-indicator {
-                top: env(safe-area-inset-top, 20px);
-                padding: 10px 25px;
-                font-size: 16px;
+                top: 5px;
+                padding: 6px 15px;
+                font-size: 13px;
             }
             
-            .controls {
-                bottom: 90px;
-                gap: 15px;
-                padding: 10px 20px;
-            }
-            
-            .control-btn {
-                width: 45px;
-                height: 45px;
-            }
-            
-            .app-title {
-                top: 20px;
-                left: 20px;
-                font-size: 18px;
-            }
-            
-            .quality-toggle {
-                top: 20px;
-                right: 20px;
-                padding: 8px 15px;
-                font-size: 14px;
-            }
-            
-            #pdf-container {
-                height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 80px);
-                padding: 5px;
+            .nav-btn {
+                width: 40px;
+                height: 40px;
             }
         }
     </style>
@@ -374,54 +211,26 @@
     <div id="error-message"></div>
     <div id="loader">
         <div class="spinner"></div>
-        <div class="loading-text">正在加载PDF文档...</div>
-    </div>
-    
-    <div class="app-title">
-        <i class="fas fa-file-pdf"></i>
-        <span>PDF阅读器 - 翻页修复版</span>
-    </div>
-    
-    <div class="quality-toggle">
-        <i class="fas fa-star"></i>
-        <span>高清模式</span>
+        <div class="loading-text">加载PDF文档中...</div>
     </div>
     
     <div id="pdf-container">
-        <!-- 翻页区域指示器 -->
-        <div class="page-nav-area prev-area" id="prev-area"></div>
-        <div class="page-nav-area next-area" id="next-area"></div>
-        
         <canvas id="pdf-canvas"></canvas>
     </div>
     
-    <div class="scale-indicator" id="scale-indicator"></div>
-    
-    <button class="nav-btn prev-btn" aria-label="上一页">
-        <i class="fas fa-chevron-left"></i>
+    <!-- 导航按钮 -->
+    <button class="nav-btn prev-btn">
+        <svg viewBox="0 0 24 24">
+            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/>
+        </svg>
     </button>
-    <button class="nav-btn next-btn" aria-label="下一页">
-        <i class="fas fa-chevron-right"></i>
+    <button class="nav-btn next-btn">
+        <svg viewBox="0 0 24 24">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+        </svg>
     </button>
     
-    <div class="controls">
-        <div class="control-btn" id="zoom-in">
-            <i class="fas fa-search-plus"></i>
-        </div>
-        <div class="control-btn" id="zoom-out">
-            <i class="fas fa-search-minus"></i>
-        </div>
-        <div class="control-btn" id="fit-width">
-            <i class="fas fa-arrows-alt-h"></i>
-        </div>
-        <div class="control-btn" id="fit-height">
-            <i class="fas fa-arrows-alt-v"></i>
-        </div>
-        <div class="control-btn" id="fit-auto">
-            <i class="fas fa-expand-arrows-alt"></i>
-        </div>
-    </div>
-    
+    <!-- 使用pdf.js官方CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
         // 初始化PDF.js
@@ -430,26 +239,22 @@
 
         const container = document.getElementById('pdf-container');
         const canvas = document.getElementById('pdf-canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+        const ctx = canvas.getContext('2d');
         const loader = document.getElementById('loader');
         const errorMessage = document.getElementById('error-message');
         const prevBtn = document.querySelector('.prev-btn');
         const nextBtn = document.querySelector('.next-btn');
-        const zoomInBtn = document.getElementById('zoom-in');
-        const zoomOutBtn = document.getElementById('zoom-out');
-        const fitWidthBtn = document.getElementById('fit-width');
-        const fitHeightBtn = document.getElementById('fit-height');
-        const fitAutoBtn = document.getElementById('fit-auto');
-        const qualityToggle = document.querySelector('.quality-toggle');
-        const scaleIndicator = document.getElementById('scale-indicator');
-        const prevArea = document.getElementById('prev-area');
-        const nextArea = document.getElementById('next-area');
 
         // 创建页面指示器
         const pageIndicator = document.createElement('div');
         pageIndicator.className = 'page-indicator';
-        pageIndicator.style.opacity = '0';
         document.body.appendChild(pageIndicator);
+
+        // 创建触摸提示
+        const touchHint = document.createElement('div');
+        touchHint.className = 'touch-hint';
+        touchHint.textContent = '← 左右滑动翻页 →';
+        document.body.appendChild(touchHint);
 
         // 配置参数
         const config = {
@@ -459,14 +264,7 @@
             isRendering: false,
             pdfDoc: null,
             devicePixelRatio: window.devicePixelRatio || 1,
-            isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
-            baseScale: 1.5,
-            currentScale: 1.5,
-            minScale: 0.5,
-            maxScale: 3,
-            highQuality: true,
-            fitMode: 'auto', // auto, width, height
-            lastRenderSize: { width: 0, height: 0 }
+            isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
         };
 
         // 显示错误信息
@@ -475,6 +273,7 @@
             errorMessage.style.display = 'block';
             loader.style.display = 'none';
             
+            // 10秒后自动隐藏
             setTimeout(() => {
                 errorMessage.style.display = 'none';
             }, 10000);
@@ -482,61 +281,19 @@
 
         // 更新页面指示器
         function updatePageIndicator() {
-            if(config.totalPages === 0) return;
-            
             pageIndicator.textContent = `${config.currentPage} / ${config.totalPages}`;
             pageIndicator.style.opacity = '1';
             
+            // 3秒后淡出
             setTimeout(() => {
                 pageIndicator.style.opacity = '0';
             }, 3000);
         }
 
-        // 显示缩放比例
-        function showScaleIndicator() {
-            const scalePercent = Math.round(config.currentScale * 100);
-            scaleIndicator.textContent = `缩放: ${scalePercent}%`;
-            scaleIndicator.style.opacity = '1';
-            
-            setTimeout(() => {
-                scaleIndicator.style.opacity = '0';
-            }, 2000);
-        }
-
-        // 计算最佳缩放比例
-        function calculateOptimalScale(viewport, container) {
-            const containerWidth = container.clientWidth - 40;
-            const containerHeight = container.clientHeight - 40;
-            
-            const pageRatio = viewport.width / viewport.height;
-            const containerRatio = containerWidth / containerHeight;
-            
-            let scale;
-            
-            if (config.fitMode === 'width') {
-                // 适应宽度
-                scale = containerWidth / viewport.width;
-            } else if (config.fitMode === 'height') {
-                // 适应高度
-                scale = containerHeight / viewport.height;
-            } else {
-                // 自动适应
-                if (containerRatio > pageRatio) {
-                    // 高度限制
-                    scale = containerHeight / viewport.height;
-                } else {
-                    // 宽度限制
-                    scale = containerWidth / viewport.width;
-                }
-            }
-            
-            // 应用缩放限制
-            return Math.min(Math.max(scale, config.minScale), config.maxScale);
-        }
-
         // 加载PDF文档
         const loadPDF = async () => {
             try {
+                // 只加载一次PDF文档
                 if (!config.pdfDoc) {
                     const loadingTask = pdfjsLib.getDocument({
                         url: config.pdfUrl,
@@ -552,11 +309,10 @@
                 await renderPage();
                 setupEventListeners();
                 
+                // 隐藏加载器
+                loader.style.opacity = '0';
                 setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                    }, 500);
+                    loader.style.display = 'none';
                 }, 300);
                 
             } catch (err) {
@@ -565,7 +321,7 @@
             }
         };
 
-        // 高清渲染函数
+        // 渲染当前页面
         const renderPage = async () => {
             if (config.isRendering || !config.pdfDoc) return;
             config.isRendering = true;
@@ -573,92 +329,58 @@
             try {
                 const page = await config.pdfDoc.getPage(config.currentPage);
                 
+                // 根据容器尺寸动态计算缩放比例
+                const containerWidth = container.clientWidth - 20; // 减去边距
+                const containerHeight = container.clientHeight - 20;
+                
                 // 获取PDF页面的原始尺寸
-                const defaultViewport = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: 1 });
+                const pageRatio = viewport.width / viewport.height;
                 
                 // 计算最佳缩放比例
-                const scale = config.highQuality ? 
-                    calculateOptimalScale(defaultViewport, container) : 
-                    config.currentScale;
-                
-                config.currentScale = scale;
-                
-                // 应用设备像素比
-                const renderScale = scale * (config.highQuality ? config.devicePixelRatio : 1);
-                const viewport = page.getViewport({ scale: renderScale });
-                
-                // 检查尺寸是否变化，避免不必要的重绘
-                const sizeChanged = 
-                    config.lastRenderSize.width !== viewport.width || 
-                    config.lastRenderSize.height !== viewport.height;
-                
-                if (!sizeChanged) {
-                    config.isRendering = false;
-                    return;
+                let scale = 1;
+                if (containerWidth / containerHeight > pageRatio) {
+                    // 高度限制
+                    scale = containerHeight / viewport.height;
+                } else {
+                    // 宽度限制
+                    scale = containerWidth / viewport.width;
                 }
                 
-                // 记录当前尺寸
-                config.lastRenderSize = {
-                    width: viewport.width,
-                    height: viewport.height
-                };
+                // 考虑设备像素比
+                scale = Math.min(scale * 0.95, 3) * config.devicePixelRatio;
+                
+                const scaledViewport = page.getViewport({ scale });
                 
                 // 设置canvas尺寸
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                canvas.height = scaledViewport.height;
+                canvas.width = scaledViewport.width;
                 
                 // 设置canvas的CSS尺寸
-                canvas.style.height = `${viewport.height / config.devicePixelRatio}px`;
-                canvas.style.width = `${viewport.width / config.devicePixelRatio}px`;
+                canvas.style.height = `${scaledViewport.height / config.devicePixelRatio}px`;
+                canvas.style.width = `${scaledViewport.width / config.devicePixelRatio}px`;
                 
                 // 清除上一页内容
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // 设置画布背景色为白色
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // 高清渲染设置
-                ctx.save();
-                ctx.scale(config.devicePixelRatio, config.devicePixelRatio);
-                ctx.imageSmoothingEnabled = config.highQuality;
-                ctx.imageSmoothingQuality = config.highQuality ? 'high' : 'medium';
-                
                 // 渲染PDF页面
                 const renderContext = {
                     canvasContext: ctx,
-                    viewport: viewport,
+                    viewport: scaledViewport,
                     intent: 'display',
-                    enableWebGL: true,
-                    renderInteractiveForms: false
+                    enableWebGL: true
                 };
                 
                 await page.render(renderContext).promise;
-                ctx.restore();
                 
+                // 更新页面指示器
                 updatePageIndicator();
-                showScaleIndicator();
                 
             } catch (err) {
                 console.error('页面渲染失败:', err);
                 showError(`渲染页面失败: ${err.message}`);
             } finally {
                 config.isRendering = false;
-            }
-        };
-
-        // 翻页功能
-        const goToPrevPage = () => {
-            if (config.currentPage > 1) {
-                config.currentPage--;
-                renderPage();
-            }
-        };
-
-        const goToNextPage = () => {
-            if (config.currentPage < config.totalPages) {
-                config.currentPage++;
-                renderPage();
             }
         };
 
@@ -674,17 +396,13 @@
             prevBtn.addEventListener('click', goToPrevPage);
             nextBtn.addEventListener('click', goToNextPage);
             
-            // 点击翻页区域
-            prevArea.addEventListener('click', goToPrevPage);
-            nextArea.addEventListener('click', goToNextPage);
-            
             // 触摸滑动翻页
             let touchStartX = 0;
             let touchStartTime = 0;
             let isSwiping = false;
             
             container.addEventListener('touchstart', (e) => {
-                if (e.touches.length > 1) return;
+                if (e.touches.length > 1) return; // 忽略多点触控
                 touchStartX = e.touches[0].clientX;
                 touchStartTime = Date.now();
                 isSwiping = true;
@@ -692,7 +410,7 @@
             
             container.addEventListener('touchmove', (e) => {
                 if (!isSwiping) return;
-                e.preventDefault();
+                e.preventDefault(); // 防止页面滚动
             }, { passive: false });
             
             container.addEventListener('touchend', (e) => {
@@ -703,6 +421,7 @@
                 const diffX = touchStartX - touchEndX;
                 const timeDiff = Date.now() - touchStartTime;
                 
+                // 快速滑动检测 (300ms内滑动超过50px)
                 if (Math.abs(diffX) > 50 && timeDiff < 300) {
                     if (diffX > 0) goToNextPage();
                     else goToPrevPage();
@@ -723,14 +442,10 @@
             });
             
             // 窗口大小变化时重新渲染
-            let resizeTimer;
             window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    if (!config.isRendering) {
-                        renderPage();
-                    }
-                }, 300);
+                if (!config.isRendering) {
+                    renderPage();
+                }
             });
             
             // 防止移动端缩放
@@ -741,43 +456,21 @@
             document.addEventListener('dblclick', (e) => {
                 e.preventDefault();
             });
-            
-            // 缩放控制
-            zoomInBtn.addEventListener('click', () => {
-                config.fitMode = 'manual';
-                config.currentScale = Math.min(config.currentScale + 0.1, config.maxScale);
+        };
+
+        // 翻页功能
+        const goToPrevPage = () => {
+            if (config.currentPage > 1) {
+                config.currentPage--;
                 renderPage();
-            });
-            
-            zoomOutBtn.addEventListener('click', () => {
-                config.fitMode = 'manual';
-                config.currentScale = Math.max(config.currentScale - 0.1, config.minScale);
+            }
+        };
+
+        const goToNextPage = () => {
+            if (config.currentPage < config.totalPages) {
+                config.currentPage++;
                 renderPage();
-            });
-            
-            fitWidthBtn.addEventListener('click', () => {
-                config.fitMode = 'width';
-                renderPage();
-            });
-            
-            fitHeightBtn.addEventListener('click', () => {
-                config.fitMode = 'height';
-                renderPage();
-            });
-            
-            fitAutoBtn.addEventListener('click', () => {
-                config.fitMode = 'auto';
-                renderPage();
-            });
-            
-            // 高清模式切换
-            qualityToggle.addEventListener('click', () => {
-                config.highQuality = !config.highQuality;
-                qualityToggle.innerHTML = config.highQuality ? 
-                    '<i class="fas fa-star"></i><span>高清模式</span>' : 
-                    '<i class="fas fa-star-half-alt"></i><span>标准模式</span>';
-                renderPage();
-            });
+            }
         };
 
         // 初始化
@@ -787,9 +480,15 @@
                 document.body.classList.add('mobile');
                 config.devicePixelRatio = Math.min(window.devicePixelRatio, 2);
                 
-                // 添加安全区域适配
-                container.style.paddingBottom = 'calc(env(safe-area-inset-bottom) + 20px)';
+                // 添加状态栏空间（针对iOS）
+                document.documentElement.style.setProperty('--sat', 'env(safe-area-inset-top)');
+                document.documentElement.style.setProperty('--sab', 'env(safe-area-inset-bottom)');
             }
+            
+            // 添加触摸提示
+            setTimeout(() => {
+                touchHint.style.display = 'none';
+            }, 5000);
             
             loadPDF();
         };
