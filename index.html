@@ -12,12 +12,14 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
-            }
-            :root {
+        }
+        :root {
             --primary-blue: #032445;
             --dark-blue: #082654;
             --light-blue: #04365f;
             --background-blue: #07416a;
+            --control-bg: rgba(0, 0, 0, 0.7);
+            --title-gradient: linear-gradient(135deg, #0a2b5a, #032445);
         }
 
         html, body {
@@ -36,6 +38,48 @@
             align-items: center;
             overscroll-behavior: none;
             padding: 0;
+        }
+
+        /* 标题栏样式 - 三行设计 */
+        #title-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--title-gradient);
+            color: white;
+            text-align: center;
+            padding: 12px 0;
+            z-index: 30;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .title-main {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .title-sub {
+            font-size: 15px;
+            opacity: 0.9;
+            margin: 2px 0;
+            font-weight: 500;
+        }
+        
+        .title-info {
+            font-size: 14px;
+            opacity: 0.85;
+            margin-top: 4px;
+            font-weight: 500;
+            color: #a8d1ff;
         }
 
         /* 加载指示器 */
@@ -94,13 +138,23 @@
             position: relative;
             width: 100%;
             max-width: 100%;
-            height: calc(100vh - 5px); /* 留出一点空间防止溢出 */
+            height: calc(100vh - 95px); /* 增加标题栏空间 */
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             padding: 0;
-            margin: 0;
+            margin: 95px 0 0; /* 增加标题栏空间 */
+            touch-action: none;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
         }
 
         #pdf-canvas {
@@ -111,15 +165,59 @@
             touch-action: none;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
             background: white;
+            transition: transform 0.1s ease;
+            transform-origin: center center;
+            position: absolute;
+            z-index: 2; /* 确保主canvas在最上层 */
+        }
+        
+        /* 抽出动画效果 - 重构版本 */
+        .temp-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: white;
+            z-index: 1; /* 低于主canvas */
+            transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.5s ease;
+        }
+        
+        .slide-out-left {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        
+        .slide-out-right {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        
+        .slide-in-left {
+            transform: translateX(-100%);
+            animation: slideInLeft 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        
+        .slide-in-right {
+            transform: translateX(100%);
+            animation: slideInRight 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        
+        @keyframes slideInLeft {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(0); }
+        }
+        
+        @keyframes slideInRight {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(0); }
         }
 
         /* 页面指示器 */
         .page-indicator {
             position: fixed;
-            top: 15px;
+            top: 100px; /* 在标题栏下方 */
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
+            background: var(--control-bg);
             color: white;
             padding: 8px 20px;
             border-radius: 25px;
@@ -128,6 +226,7 @@
             transition: opacity 0.3s;
             backdrop-filter: blur(5px);
             font-weight: 500;
+            pointer-events: none;
         }
 
         /* 导航按钮 */
@@ -137,7 +236,7 @@
             transform: translateY(-50%);
             width: 50px;
             height: 50px;
-            background: rgba(0, 0, 0, 0.6);
+            background: var(--control-bg);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -183,6 +282,7 @@
             font-weight: 500;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
+            pointer-events: none;
         }
 
         @keyframes fadeHint {
@@ -191,23 +291,170 @@
             80% { opacity: 1; }
             100% { opacity: 0; }
         }
-
+        
+        /* 缩放控制栏 */
+        .zoom-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 20;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        .zoom-controls:hover {
+            opacity: 1;
+        }
+        
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--control-bg);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s;
+        }
+        
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+        
         /* 状态栏适配 */
-        @media (max-height: 600px) {
+        @media (max-height: 700px) {
+            #title-bar {
+                padding: 8px 0;
+            }
+            
+            .title-main {
+                font-size: 18px;
+                margin-bottom: 3px;
+            }
+            
+            .title-sub {
+                font-size: 14px;
+                margin: 1px 0;
+            }
+            
+            .title-info {
+                font-size: 13px;
+                margin-top: 3px;
+            }
+            
             .page-indicator {
-                top: 5px;
+                top: 85px;
                 padding: 6px 15px;
                 font-size: 13px;
+            }
+            
+            #pdf-container {
+                height: calc(100vh - 85px);
+                margin-top: 85px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            #title-bar {
+                padding: 6px 0;
+            }
+            
+            .title-main {
+                font-size: 16px;
+            }
+            
+            .title-sub {
+                font-size: 13px;
+            }
+            
+            .title-info {
+                font-size: 12px;
             }
             
             .nav-btn {
                 width: 40px;
                 height: 40px;
             }
+            
+            .zoom-controls {
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .zoom-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 20px;
+            }
+            
+            .page-indicator {
+                top: 80px;
+                padding: 5px 12px;
+                font-size: 12px;
+            }
+            
+            #pdf-container {
+                height: calc(100vh - 80px);
+                margin-top: 80px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title-main {
+                font-size: 17px;
+            }
+            
+            .title-sub {
+                font-size: 13px;
+            }
+            
+            .title-info {
+                font-size: 12px;
+            }
+        }
+        
+        /* 缩放指示器 */
+        .zoom-level {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            background: var(--control-bg);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(5px);
+            pointer-events: none;
+        }
+        
+        @media (max-height: 600px) {
+            .zoom-level {
+                bottom: 75px;
+                right: 15px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 三行标题栏 -->
+    <div id="title-bar">
+        <div class="title-main">审计观察</div>
+        <div class="title-sub">编制：审计部</div>
+        <div class="title-info">2025年第1期</div>
+    </div>
+    
     <div id="error-message"></div>
     <div id="loader">
         <div class="spinner"></div>
@@ -215,7 +462,9 @@
     </div>
     
     <div id="pdf-container">
-        <canvas id="pdf-canvas"></canvas>
+        <div class="canvas-wrapper">
+            <canvas id="pdf-canvas"></canvas>
+        </div>
     </div>
     
     <!-- 导航按钮 -->
@@ -230,6 +479,15 @@
         </svg>
     </button>
     
+    <!-- 缩放控制按钮 -->
+    <div class="zoom-controls">
+        <button class="zoom-btn" id="zoom-in">+</button>
+        <button class="zoom-btn" id="zoom-out">−</button>
+        <button class="zoom-btn" id="reset-zoom">↺</button>
+    </div>
+    
+    <div class="zoom-level" id="zoom-indicator">100%</div>
+    
     <!-- 使用pdf.js官方CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
@@ -238,12 +496,17 @@
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         const container = document.getElementById('pdf-container');
+        const canvasWrapper = document.querySelector('.canvas-wrapper');
         const canvas = document.getElementById('pdf-canvas');
         const ctx = canvas.getContext('2d');
         const loader = document.getElementById('loader');
         const errorMessage = document.getElementById('error-message');
         const prevBtn = document.querySelector('.prev-btn');
         const nextBtn = document.querySelector('.next-btn');
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const resetZoomBtn = document.getElementById('reset-zoom');
+        const zoomIndicator = document.getElementById('zoom-indicator');
 
         // 创建页面指示器
         const pageIndicator = document.createElement('div');
@@ -253,7 +516,7 @@
         // 创建触摸提示
         const touchHint = document.createElement('div');
         touchHint.className = 'touch-hint';
-        touchHint.textContent = '← 左右滑动翻页 →';
+        touchHint.textContent = '← 左右滑动翻页 | 双指缩放 →';
         document.body.appendChild(touchHint);
 
         // 配置参数
@@ -264,7 +527,21 @@
             isRendering: false,
             pdfDoc: null,
             devicePixelRatio: window.devicePixelRatio || 1,
-            isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+            isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+            // 缩放相关状态
+            scale: 1,
+            minScale: 0.5,
+            maxScale: 3,
+            lastScale: 1,
+            offset: { x: 0, y: 0 },
+            lastOffset: { x: 0, y: 0 },
+            isDragging: false,
+            isPinching: false,
+            dragStart: { x: 0, y: 0 },
+            originalCanvasSize: { width: 0, height: 0 },
+            renderScale: 1,
+            // 翻页动画状态
+            isAnimating: false
         };
 
         // 显示错误信息
@@ -288,6 +565,49 @@
             setTimeout(() => {
                 pageIndicator.style.opacity = '0';
             }, 3000);
+        }
+        
+        // 更新缩放指示器
+        function updateZoomIndicator() {
+            zoomIndicator.textContent = `${Math.round(config.scale * 100)}%`;
+            zoomIndicator.style.opacity = '1';
+            
+            // 2秒后淡出
+            setTimeout(() => {
+                zoomIndicator.style.opacity = '0';
+            }, 2000);
+        }
+        
+        // 应用变换到Canvas
+        function applyTransform() {
+            canvas.style.transform = `translate(${config.offset.x}px, ${config.offset.y}px) scale(${config.scale})`;
+        }
+        
+        // 限制偏移量
+        function clampOffset() {
+            const containerRect = container.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            // 计算最大可偏移范围
+            const scaledWidth = canvasRect.width * config.scale;
+            const scaledHeight = canvasRect.height * config.scale;
+            
+            const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
+            const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
+            
+            // 应用限制
+            config.offset.x = Math.max(-maxX, Math.min(maxX, config.offset.x));
+            config.offset.y = Math.max(-maxY, Math.min(maxY, config.offset.y));
+            
+            applyTransform();
+        }
+        
+        // 重置缩放和平移
+        function resetZoomAndPan() {
+            config.scale = 1;
+            config.offset = { x: 0, y: 0 };
+            applyTransform();
+            updateZoomIndicator();
         }
 
         // 加载PDF文档
@@ -349,12 +669,19 @@
                 
                 // 考虑设备像素比
                 scale = Math.min(scale * 0.95, 3) * config.devicePixelRatio;
+                config.renderScale = scale;
                 
                 const scaledViewport = page.getViewport({ scale });
                 
                 // 设置canvas尺寸
                 canvas.height = scaledViewport.height;
                 canvas.width = scaledViewport.width;
+                
+                // 保存原始canvas尺寸
+                config.originalCanvasSize = {
+                    width: canvas.width / config.devicePixelRatio,
+                    height: canvas.height / config.devicePixelRatio
+                };
                 
                 // 设置canvas的CSS尺寸
                 canvas.style.height = `${scaledViewport.height / config.devicePixelRatio}px`;
@@ -373,6 +700,9 @@
                 
                 await page.render(renderContext).promise;
                 
+                // 重置缩放和平移
+                resetZoomAndPan();
+                
                 // 更新页面指示器
                 updatePageIndicator();
                 
@@ -384,52 +714,215 @@
             }
         };
 
+        // 翻页动画 - 重构版本（完全解决阴影问题）
+        async function playPageSlideAnimation(direction) {
+            if (config.isAnimating) return;
+            config.isAnimating = true;
+            
+            // 1. 创建临时canvas（无阴影）
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // 复制当前canvas内容
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // 设置样式
+            tempCanvas.className = 'temp-canvas';
+            tempCanvas.style.width = canvas.style.width;
+            tempCanvas.style.height = canvas.style.height;
+            tempCanvas.style.transform = canvas.style.transform;
+            
+            // 添加到容器
+            canvasWrapper.appendChild(tempCanvas);
+            
+            // 2. 立即设置新页面的初始位置（屏幕外）
+            const newPage = direction === 'next' ? config.currentPage + 1 : config.currentPage - 1;
+            config.currentPage = newPage;
+            await renderPage();
+            
+            // 3. 设置新页面初始位置（屏幕外）
+            if (direction === 'next') {
+                canvas.classList.add('slide-in-right');
+            } else {
+                canvas.classList.add('slide-in-left');
+            }
+            
+            // 4. 强制重绘
+            canvas.getBoundingClientRect();
+            tempCanvas.getBoundingClientRect();
+            
+            // 5. 开始动画
+            if (direction === 'next') {
+                tempCanvas.classList.add('slide-out-left');
+                canvas.style.animation = 'slideInRight 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards';
+            } else {
+                tempCanvas.classList.add('slide-out-right');
+                canvas.style.animation = 'slideInLeft 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards';
+            }
+            
+            // 6. 等待动画完成
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 7. 清理
+            canvasWrapper.removeChild(tempCanvas);
+            canvas.classList.remove('slide-in-right', 'slide-in-left');
+            canvas.style.animation = '';
+            
+            config.isAnimating = false;
+        }
+
         // 事件监听设置
         const setupEventListeners = () => {
             // 键盘翻页
             document.addEventListener('keydown', (e) => {
+                if (config.isAnimating) return;
                 if (e.key === 'ArrowLeft') goToPrevPage();
                 if (e.key === 'ArrowRight') goToNextPage();
+                if (e.key === '+' || e.key === '=') zoomIn();
+                if (e.key === '-' || e.key === '_') zoomOut();
+                if (e.key === '0') resetZoomAndPan();
             });
             
             // 按钮翻页
             prevBtn.addEventListener('click', goToPrevPage);
             nextBtn.addEventListener('click', goToNextPage);
             
-            // 触摸滑动翻页
+            // 缩放按钮
+            zoomInBtn.addEventListener('click', zoomIn);
+            zoomOutBtn.addEventListener('click', zoomOut);
+            resetZoomBtn.addEventListener('click', resetZoomAndPan);
+            
+            // 触摸事件处理
             let touchStartX = 0;
+            let touchStartY = 0;
             let touchStartTime = 0;
             let isSwiping = false;
             
             container.addEventListener('touchstart', (e) => {
-                if (e.touches.length > 1) return; // 忽略多点触控
-                touchStartX = e.touches[0].clientX;
-                touchStartTime = Date.now();
-                isSwiping = true;
-            }, { passive: true });
+                if (config.isAnimating) return;
+                if (e.touches.length === 1) {
+                    // 单指触摸 - 准备平移
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    config.dragStart = { 
+                        x: touch.clientX - config.offset.x, 
+                        y: touch.clientY - config.offset.y 
+                    };
+                    config.isDragging = true;
+                    isSwiping = true;
+                    touchStartTime = Date.now();
+                } else if (e.touches.length === 2) {
+                    // 双指触摸 - 准备缩放
+                    e.preventDefault();
+                    config.isPinching = true;
+                    
+                    // 计算初始距离
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    config.lastDistance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 计算中心点
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    
+                    // 保存初始状态
+                    config.lastScale = config.scale;
+                    config.lastOffset = { ...config.offset };
+                    
+                    // 计算相对于容器的中心点
+                    const containerRect = container.getBoundingClientRect();
+                    config.pinchCenter = {
+                        x: midX - containerRect.left,
+                        y: midY - containerRect.top
+                    };
+                }
+            }, { passive: false });
             
             container.addEventListener('touchmove', (e) => {
-                if (!isSwiping) return;
-                e.preventDefault(); // 防止页面滚动
+                if (config.isAnimating) return;
+                if (config.isDragging && e.touches.length === 1) {
+                    // 单指移动 - 平移
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    
+                    config.offset.x = touch.clientX - config.dragStart.x;
+                    config.offset.y = touch.clientY - config.dragStart.y;
+                    
+                    clampOffset();
+                } else if (config.isPinching && e.touches.length === 2) {
+                    // 双指移动 - 缩放
+                    e.preventDefault();
+                    
+                    // 计算当前距离
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // 计算缩放比例
+                    if (config.lastDistance > 0) {
+                        const scaleChange = distance / config.lastDistance;
+                        config.scale = Math.max(
+                            config.minScale, 
+                            Math.min(config.maxScale, config.lastScale * scaleChange)
+                        );
+                        
+                        // 计算中心点
+                        const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                        
+                        // 计算相对于容器的中心点
+                        const containerRect = container.getBoundingClientRect();
+                        const centerX = midX - containerRect.left;
+                        const centerY = midY - containerRect.top;
+                        
+                        // 计算缩放中心偏移
+                        const scaleRatio = config.scale / config.lastScale;
+                        config.offset.x = centerX - (centerX - config.lastOffset.x) * scaleRatio;
+                        config.offset.y = centerY - (centerY - config.lastOffset.y) * scaleRatio;
+                        
+                        applyTransform();
+                        updateZoomIndicator();
+                    }
+                    
+                    config.lastDistance = distance;
+                }
             }, { passive: false });
             
             container.addEventListener('touchend', (e) => {
-                if (!isSwiping) return;
-                isSwiping = false;
-                
-                const touchEndX = e.changedTouches[0].clientX;
-                const diffX = touchStartX - touchEndX;
-                const timeDiff = Date.now() - touchStartTime;
-                
-                // 快速滑动检测 (300ms内滑动超过50px)
-                if (Math.abs(diffX) > 50 && timeDiff < 300) {
-                    if (diffX > 0) goToNextPage();
-                    else goToPrevPage();
+                if (config.isAnimating) return;
+                if (config.isDragging) {
+                    // 单指结束 - 结束平移
+                    config.isDragging = false;
+                    
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const touchEndY = e.changedTouches[0].clientY;
+                    const diffX = touchStartX - touchEndX;
+                    const timeDiff = Date.now() - touchStartTime;
+                    
+                    // 快速滑动检测 (300ms内滑动超过50px)
+                    if (Math.abs(diffX) > 50 && timeDiff < 300 && config.scale === 1) {
+                        if (diffX > 0) goToNextPage();
+                        else goToPrevPage();
+                    }
+                    
+                    // 确保在平移结束后限制边界
+                    clampOffset();
+                } else if (config.isPinching) {
+                    // 双指结束 - 结束缩放
+                    config.isPinching = false;
+                    clampOffset();
                 }
+                
+                isSwiping = false;
             }, { passive: true });
             
             // 点击左右边缘翻页
             container.addEventListener('click', (e) => {
+                if (config.isAnimating || config.scale !== 1) return; // 缩放状态下不触发翻页
+                
                 const rect = container.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
                 const width = rect.width;
@@ -443,7 +936,8 @@
             
             // 窗口大小变化时重新渲染
             window.addEventListener('resize', () => {
-                if (!config.isRendering) {
+                if (!config.isRendering && !config.isAnimating) {
+                    resetZoomAndPan();
                     renderPage();
                 }
             });
@@ -457,19 +951,32 @@
                 e.preventDefault();
             });
         };
+        
+        // 缩放功能
+        function zoomIn() {
+            config.scale = Math.min(config.maxScale, config.scale + 0.2);
+            applyTransform();
+            clampOffset();
+            updateZoomIndicator();
+        }
+        
+        function zoomOut() {
+            config.scale = Math.max(config.minScale, config.scale - 0.2);
+            applyTransform();
+            clampOffset();
+            updateZoomIndicator();
+        }
 
         // 翻页功能
         const goToPrevPage = () => {
-            if (config.currentPage > 1) {
-                config.currentPage--;
-                renderPage();
+            if (config.currentPage > 1 && !config.isAnimating) {
+                playPageSlideAnimation('prev');
             }
         };
 
         const goToNextPage = () => {
-            if (config.currentPage < config.totalPages) {
-                config.currentPage++;
-                renderPage();
+            if (config.currentPage < config.totalPages && !config.isAnimating) {
+                playPageSlideAnimation('next');
             }
         };
 
